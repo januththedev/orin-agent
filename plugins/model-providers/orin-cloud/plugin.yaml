@@ -1,0 +1,5 @@
+name: orin-cloud-provider
+kind: model-provider
+version: 1.0.0
+description: Orin Cloud free presets over an OpenAI-compatible gateway
+author: Januth Nimnal
