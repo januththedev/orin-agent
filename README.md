@@ -245,6 +245,21 @@ scripts/run_tests.sh
 
 ---
 
+## Orin Cloud (free presets, no model keys)
+
+Orin Agent ships an `orin-cloud` provider and an `orin-tools` skill:
+
+```bash
+export ORIN_TOKEN="<session token from orin login>"
+orin model set orin-cloud/orin-balanced   # or orin-thinking / orin-coding
+```
+
+Presets resolve live server-side (free OpenRouter chains, same quotas as the
+web app). The skill adds keyless web search (with real weather forecasts)
+and sandboxed code execution in ~20 languages.
+
+---
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

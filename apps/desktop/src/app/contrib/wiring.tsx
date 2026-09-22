@@ -40,6 +40,7 @@ import { translateNow } from '@/i18n'
 import { type ChatMessage, chatMessageText } from '@/lib/chat-messages'
 import { isMessagingSource } from '@/lib/session-source'
 import { $lastWakePhrase, useGlassFeedPush } from '@/lib/voice/glass-feed'
+import { maybeShowJarvisNudge } from '@/lib/voice/jarvis-nudge'
 import { activateWakeIndicator } from '@/lib/wake-indicator'
 import { playWakeSound } from '@/lib/wake-sound'
 import { $billingSettingsRequest } from '@/store/billing-block'
@@ -197,6 +198,12 @@ export function ContribWiring({ children }: { children: ReactNode }) {
   // Glass mode: mirror the voice-visible transcript into the translucent
   // mini overlay whenever it changes (pushes only while open).
   useGlassFeedPush()
+
+  // First-run Jarvis hello (once ever): points at wake word + glass mode.
+  // eslint-disable-next-line react-hooks/rules-of-hooks -- module effect, runs once per mount
+  useEffect(() => {
+    maybeShowJarvisNudge()
+  }, [])
 
   const busyRef = useRef(false)
   const creatingSessionRef = useRef(false)
