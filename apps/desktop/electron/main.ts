@@ -44,6 +44,7 @@ import {
 } from './api-transport'
 import { appIconCandidates, resolveAppIcon } from './app-icon'
 import { installApplicationMenuAfterFirstWindow } from './application-menu-startup'
+import { getAutoLaunch, setAutoLaunch, type AutoLaunchDeps } from './auto-launch'
 import {
   stopBackendChild as stopBackendChildImpl,
   stopBackendTreesForUpdate,
@@ -15549,6 +15550,25 @@ ipcMain.handle('hermes:pool-limits:set', async (_event, raw) => {
   })
 
   return { ok: true, limits: next }
+})
+// OS auto-launch (Settings → About → "Start with your computer").
+// Windows/macOS go through Electron login items; Linux gets a freedesktop
+// autostart entry. Read-your-writes: set returns the effective state.
+const autoLaunchDeps: AutoLaunchDeps = {
+  platform: process.platform,
+  execPath: process.execPath,
+  getLoginItemSettings: opts => app.getLoginItemSettings(opts),
+  setLoginItemSettings: opts => app.setLoginItemSettings(opts),
+  homedir: () => os.homedir(),
+  mkdirSync: (dir, opts) => fs.mkdirSync(dir, opts),
+  writeFileSync: (file, data, opts) => fs.writeFileSync(file, data, opts),
+  unlinkSync: file => fs.unlinkSync(file),
+  existsSync: file => fs.existsSync(file)
+}
+ipcMain.handle('hermes:auto-launch:get', async () => ({ enabled: getAutoLaunch(autoLaunchDeps) }))
+ipcMain.handle('hermes:auto-launch:set', async (_event, raw) => {
+  const enabled = setAutoLaunch(autoLaunchDeps, raw?.enabled === true)
+  return { ok: true, enabled }
 })
 ipcMain.handle('hermes:gateway:ws-url', async (_event, profile) => {
   return gatewayWsUrlIpcResult(() => freshGatewayWsUrl(profile))

@@ -166,16 +166,16 @@ describe('armWakeWord (gateway-ready auto-arm)', () => {
       calls.push(method)
 
       if (method === 'wake.status') {
-        return { available: true, listening: false, phrase: 'hey hermes', provider: 'porcupine' }
+        return { available: true, listening: false, phrase: 'hey orin', provider: 'sherpa' }
       }
 
-      return { phrase: 'hey hermes', started: true }
+      return { phrase: 'hey orin', started: true }
     })
 
     await armWakeWord(request)
 
     expect(calls).toEqual(['wake.status', 'wake.start'])
-    expect($wakeWord.get()).toMatchObject({ available: true, listening: true, phrase: 'hey hermes' })
+      expect($wakeWord.get()).toMatchObject({ available: true, listening: true, phrase: 'hey orin' })
   })
 
   it('does not attempt to arm when the wake word is unavailable', async () => {
@@ -184,7 +184,7 @@ describe('armWakeWord (gateway-ready auto-arm)', () => {
     const request = requester(method => {
       calls.push(method)
 
-      return { available: false, hint: 'no mic', listening: false, phrase: 'hey hermes' }
+      return { available: false, hint: 'no mic', listening: false, phrase: 'hey orin' }
     })
 
     await armWakeWord(request)

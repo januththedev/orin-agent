@@ -18,11 +18,11 @@ import {
   startActiveUpdate
 } from '@/store/updates'
 
-import { ListRow, SectionHeading, SettingsContent } from './primitives'
+import { ListRow, SectionHeading, SettingsContent, ToggleRow } from './primitives'
 import { UninstallSection } from './uninstall-section'
 
-const RELEASE_NOTES_URL = 'https://github.com/NousResearch/hermes-agent/releases'
-const INSTALLER_URL = 'https://hermes-agent.nousresearch.com/'
+const RELEASE_NOTES_URL = 'https://github.com/januththedev/orin-agent/releases'
+const INSTALLER_URL = 'https://github.com/januththedev/orin-agent/releases/latest'
 
 function relativeTime(ms: number | undefined, a: Translations['settings']['about']) {
   if (!ms) {
@@ -48,6 +48,49 @@ function relativeTime(ms: number | undefined, a: Translations['settings']['about
 
 interface AboutSettingsProps {
   subpage?: string
+}
+
+/**
+ * OS auto-launch ("start Orin Agent with your computer"). Device-local,
+ * main-owned (login item on Windows/macOS, autostart entry on Linux).
+ * Plain-English copy on purpose — no i18n keys to keep in sync.
+ */
+function AutoLaunchRow() {
+  const [enabled, setEnabled] = useState<boolean | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    let live = true
+    void window.hermesDesktop?.getAutoLaunch?.()
+      .then(r => {
+        if (live) setEnabled(r?.enabled === true)
+      })
+      .catch(() => {
+        if (live) setEnabled(false)
+      })
+    return () => {
+      live = false
+    }
+  }, [])
+
+  if (enabled === null) return null
+
+  return (
+    <ToggleRow
+      checked={enabled}
+      description="Orin Agent starts automatically when you sign in, so the wake word and pets are already awake."
+      disabled={busy}
+      label="Start with your computer"
+      onChange={on => {
+        setBusy(true)
+        void window.hermesDesktop
+          ?.setAutoLaunch?.(on)
+          .then(r => setEnabled(r?.enabled === true))
+          .catch(() => undefined)
+          .finally(() => setBusy(false))
+      }}
+    />
+  )
 }
 
 export function AboutSettings({ subpage }: AboutSettingsProps = {}) {
@@ -245,6 +288,8 @@ function AppUpdatesSettings({ includeUninstall }: { includeUninstall: boolean })
           hint={a.branchCommit(status?.branch ?? 'unknown', status?.currentSha?.slice(0, 7) ?? 'unknown')}
           title={a.automaticUpdates}
         />
+
+        <AutoLaunchRow />
 
         {includeUninstall && <UninstallSection />}
       </div>

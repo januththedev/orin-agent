@@ -37,6 +37,10 @@ contextBridge.exposeInMainWorld('hermesDesktop', {
   touchBackend: (profile, options) => ipcRenderer.invoke('hermes:backend:touch', profile, options),
   getPoolLimits: () => ipcRenderer.invoke('hermes:pool-limits:get'),
   setPoolLimits: limits => ipcRenderer.invoke('hermes:pool-limits:set', limits),
+  // OS auto-launch (Settings → About). Main owns the login item / autostart
+  // file; the renderer only reads and flips the switch.
+  getAutoLaunch: () => ipcRenderer.invoke('hermes:auto-launch:get'),
+  setAutoLaunch: (enabled: boolean) => ipcRenderer.invoke('hermes:auto-launch:set', { enabled }),
   getGatewayWsUrl: profile => ipcRenderer.invoke('hermes:gateway:ws-url', profile),
   // Registry-scoped fresh WS URL: { connectionId, profile } → result shape of
   // getGatewayWsUrl, minted against that connection's backend.

@@ -65,6 +65,10 @@ declare global {
         ok: boolean
         limits: PoolLimits
       }>
+      // OS auto-launch (Settings → About). Main owns the login item /
+      // autostart file; set resolves the effective state (read-your-writes).
+      getAutoLaunch: () => Promise<{ enabled: boolean }>
+      setAutoLaunch: (enabled: boolean) => Promise<{ ok: boolean; enabled: boolean }>
       getGatewayWsUrl: (profile?: null | string) => Promise<GatewayWsUrlResult>
       // Open (or focus) a standalone OS window for a single chat session so
       // the user can work with multiple chats side by side. Returns ok:false

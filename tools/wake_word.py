@@ -60,9 +60,13 @@ class WakeWordInUse(RuntimeError):
 
 # capture: "local" (PortAudio on the backend host), "client" (desktop/TUI streams int16
 # frames via wake.feed), or "auto" (local when a device exists, else client).
+#
+# Orin default: sherpa (open-vocabulary KWS — any typed phrase, zero
+# training) listening for "hey orin". The bundled "hey hermes" openWakeWord
+# model stays available for anyone who asks for it by name.
 _DEFAULTS: Dict[str, Any] = {
     "enabled": False, "surface": "auto", "input_device": None, "capture": "auto",
-    "provider": "openwakeword", "phrase": "hey hermes", "sensitivity": 0.6,
+    "provider": "sherpa", "phrase": "hey orin", "sensitivity": 0.6,
     "confirmation_frames": _DEFAULT_CONFIRMATION_FRAMES, "start_new_session": True,
 }
 
