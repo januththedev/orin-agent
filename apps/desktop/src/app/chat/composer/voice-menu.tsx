@@ -16,6 +16,7 @@ import { useI18n } from '@/i18n'
 import { triggerHaptic } from '@/lib/haptics'
 import { AudioLines, Ear, EarOff, iconSize, Loader2, Square, Volume2, VolumeX } from '@/lib/icons'
 import { cn } from '@/lib/utils'
+import { $glassOpen, closeGlass, openGlass } from '@/lib/voice/glass-feed'
 import { $wakeWord, toggleWakeWord } from '@/store/wake-word'
 
 import { ACTIVE_ICON_BTN, GHOST_ICON_BTN } from './control-classes'
@@ -59,6 +60,7 @@ export function VoiceMenu({
   const { t } = useI18n()
   const c = t.composer
   const wake = useStore($wakeWord)
+  const glassOpen = useStore($glassOpen)
 
   const phrase = wake.phrase || 'hey orin'
   const dictating = state.voice.active || voiceStatus !== 'idle'
@@ -158,6 +160,18 @@ export function VoiceMenu({
         >
           {wakeListening ? <Ear className={iconSize.sm} /> : <EarOff className={iconSize.sm} />}
           {wakeLabel}
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem
+          checked={glassOpen}
+          className={dropdownMenuRow}
+          disabled={disabled}
+          onSelect={event => {
+            event.preventDefault()
+            triggerHaptic(glassOpen ? 'close' : 'open')
+            void (glassOpen ? closeGlass() : openGlass())
+          }}
+        >
+          {glassOpen ? 'Hide glass mode' : 'Glass mode (mini transcript)'}
         </DropdownMenuCheckboxItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -45,6 +45,7 @@ import {
 import { appIconCandidates, resolveAppIcon } from './app-icon'
 import { installApplicationMenuAfterFirstWindow } from './application-menu-startup'
 import { getAutoLaunch, setAutoLaunch, type AutoLaunchDeps } from './auto-launch'
+import { registerGlassIpc } from './glass-ipc'
 import {
   stopBackendChild as stopBackendChildImpl,
   stopBackendTreesForUpdate,
@@ -14319,6 +14320,105 @@ function closePetOverlay() {
   petOverlayWindow = null
 }
 
+// ── Glass mode ─────────────────────────────────────────────────────────────
+// The translucent mini overlay: a small frameless window showing the live
+// voice transcript (what was heard / what is being said) in glassmorphism.
+// Unlike the pet overlay it is focusable (pin + close buttons need clicks)
+// and user-movable; pinned (always-on-top) by default, unpinnable from the
+// overlay itself. The main renderer pushes transcript snapshots over IPC
+// (hermes:glass:state); the overlay only renders them.
+let glassWindow = null
+let glassPinned = true
+
+function glassUrl() {
+  if (DEV_SERVER) {
+    return `${DEV_SERVER.endsWith('/') ? DEV_SERVER.slice(0, -1) : DEV_SERVER}/?win=glass#/`
+  }
+
+  return `${pathToFileURL(resolveRendererIndex()).toString()}?win=glass#/`
+}
+
+function spawnGlassWindow() {
+  const win = new BrowserWindow({
+    width: 400,
+    height: 176,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    movable: true,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    skipTaskbar: !IS_MAC,
+    hasShadow: false,
+    alwaysOnTop: true,
+    focusable: true,
+    show: false,
+    backgroundColor: '#00000000',
+    webPreferences: {
+      preload: PRELOAD_PATH,
+      contextIsolation: true,
+      sandbox: true,
+      nodeIntegration: false,
+      devTools: true,
+      // Keep the transcript live while the main window is minimized.
+      backgroundThrottling: false
+    }
+  })
+
+  win.setAlwaysOnTop(true, IS_MAC ? 'floating' : 'screen-saver')
+  win.setVisibleOnAllWorkspaces?.(true)
+
+  wireCommonWindowHandlers(win, zoomWiringForWindowKind('glass'))
+  wireWindowReveal(win, { show: () => win.showInactive() })
+  installWindowRendererLifecycle(win, { kind: 'glass', callbacks: { log: rememberLog } })
+
+  win.on('closed', () => {
+    if (glassWindow === win) {
+      glassWindow = null
+    }
+
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('hermes:glass:closed')
+    }
+  })
+
+  attachRendererConsoleCapture(win, 'glass', rememberLog)
+  loadWindowUrl(win, glassUrl(), 'Glass overlay')
+
+  return win
+}
+
+function openGlass() {
+  if (glassWindow && !glassWindow.isDestroyed()) {
+    glassWindow.showInactive()
+    return glassWindow
+  }
+
+  glassWindow = spawnGlassWindow()
+  glassWindow.setAlwaysOnTop(glassPinned, IS_MAC ? 'floating' : 'screen-saver')
+
+  return glassWindow
+}
+
+function closeGlass() {
+  if (glassWindow && !glassWindow.isDestroyed()) {
+    glassWindow.close()
+  }
+
+  glassWindow = null
+}
+
+function setGlassPinned(pinned) {
+  glassPinned = pinned !== false
+
+  if (glassWindow && !glassWindow.isDestroyed()) {
+    glassWindow.setAlwaysOnTop(glassPinned, IS_MAC ? 'floating' : 'screen-saver')
+  }
+
+  return glassPinned
+}
+
 // ── HUD mode ────────────────────────────────────────────────────────────────
 //
 // The chrome-free floating chat: a transparent, frameless, always-on-top
@@ -15695,6 +15795,15 @@ registerPetOverlayIpc({
   getPetOverlayWindow: () => petOverlayWindow,
   openPetOverlay,
   closePetOverlay
+})
+
+// --- Glass mode (translucent transcript overlay) — see glass-ipc.ts. ------
+registerGlassIpc({
+  getMainWindow: () => mainWindow,
+  getGlassWindow: () => glassWindow,
+  openGlass,
+  closeGlass,
+  setGlassPinned
 })
 
 // --- HUD mode (chrome-free floating chat) — see hud-ipc.ts. ---------------

@@ -41,6 +41,24 @@ contextBridge.exposeInMainWorld('hermesDesktop', {
   // file; the renderer only reads and flips the switch.
   getAutoLaunch: () => ipcRenderer.invoke('hermes:auto-launch:get'),
   setAutoLaunch: (enabled: boolean) => ipcRenderer.invoke('hermes:auto-launch:set', { enabled }),
+  // Glass mode (translucent transcript overlay). State flows main → glass;
+  // the glass window reports back closes + pin changes.
+  glassOpen: () => ipcRenderer.invoke('hermes:glass:open'),
+  glassClose: () => ipcRenderer.invoke('hermes:glass:close'),
+  glassPushState: state => ipcRenderer.send('hermes:glass:state', state),
+  glassSetPinned: (pinned: boolean) => ipcRenderer.invoke('hermes:glass:set-pinned', { pinned }),
+  onGlassState: callback => {
+    const listener = (_event, payload) => callback(payload)
+    ipcRenderer.on('hermes:glass:state', listener)
+
+    return () => ipcRenderer.removeListener('hermes:glass:state', listener)
+  },
+  onGlassClosed: callback => {
+    const listener = () => callback()
+    ipcRenderer.on('hermes:glass:closed', listener)
+
+    return () => ipcRenderer.removeListener('hermes:glass:closed', listener)
+  },
   getGatewayWsUrl: profile => ipcRenderer.invoke('hermes:gateway:ws-url', profile),
   // Registry-scoped fresh WS URL: { connectionId, profile } → result shape of
   // getGatewayWsUrl, minted against that connection's backend.

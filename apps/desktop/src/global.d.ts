@@ -69,6 +69,19 @@ declare global {
       // autostart file; set resolves the effective state (read-your-writes).
       getAutoLaunch: () => Promise<{ enabled: boolean }>
       setAutoLaunch: (enabled: boolean) => Promise<{ ok: boolean; enabled: boolean }>
+      // Glass mode (translucent transcript overlay).
+      glassOpen: () => Promise<{ ok: boolean }>
+      glassClose: () => Promise<{ ok: boolean }>
+      glassPushState: (state: {
+        hearing: string
+        saying: string
+        status: 'idle' | 'listening' | 'thinking' | 'speaking'
+      }) => void
+      glassSetPinned: (pinned: boolean) => Promise<{ ok: boolean; pinned: boolean }>
+      onGlassState: (
+        callback: (state: { hearing: string; saying: string; status: string }) => void
+      ) => () => void
+      onGlassClosed: (callback: () => void) => () => void
       getGatewayWsUrl: (profile?: null | string) => Promise<GatewayWsUrlResult>
       // Open (or focus) a standalone OS window for a single chat session so
       // the user can work with multiple chats side by side. Returns ok:false

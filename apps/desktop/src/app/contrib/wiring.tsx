@@ -39,6 +39,7 @@ import { emitGatewayEvent } from '@/contrib/events'
 import { translateNow } from '@/i18n'
 import { type ChatMessage, chatMessageText } from '@/lib/chat-messages'
 import { isMessagingSource } from '@/lib/session-source'
+import { useGlassFeedPush } from '@/lib/voice/glass-feed'
 import { activateWakeIndicator } from '@/lib/wake-indicator'
 import { playWakeSound } from '@/lib/wake-sound'
 import { $billingSettingsRequest } from '@/store/billing-block'
@@ -192,6 +193,10 @@ export function ContribWiring({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient()
   const location = useLocation()
   const navigate = useNavigate()
+
+  // Glass mode: mirror the voice-visible transcript into the translucent
+  // mini overlay whenever it changes (pushes only while open).
+  useGlassFeedPush()
 
   const busyRef = useRef(false)
   const creatingSessionRef = useRef(false)

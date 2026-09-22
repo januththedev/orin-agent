@@ -1,0 +1,153 @@
+/* Glass mode — translucent mini transcript overlay (glassmorphism). */
+
+.glass-shell {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  background: transparent;
+}
+
+.glass-card {
+  flex: 1;
+  margin: 0;
+  border-radius: 18px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: hidden;
+  /* glassmorphism: blur the desktop behind, tint lightly */
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.45));
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  -webkit-app-region: drag;
+  color: #1c1917;
+  font-family: inherit;
+}
+
+@media (prefers-color-scheme: dark) {
+  .glass-card {
+    background: linear-gradient(135deg, rgba(28, 25, 23, 0.72), rgba(28, 25, 23, 0.5));
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+    color: #f5f5f4;
+  }
+}
+
+.glass-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  -webkit-app-region: drag;
+}
+
+.glass-orb {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.glass-orb--listening {
+  animation: glass-pulse 1.6s ease-in-out infinite;
+}
+
+.glass-orb--thinking {
+  animation: glass-pulse 0.9s ease-in-out infinite;
+}
+
+.glass-orb--speaking {
+  animation: glass-pulse 0.6s ease-in-out infinite;
+}
+
+@keyframes glass-pulse {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+}
+
+.glass-status {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.glass-spacer {
+  flex: 1;
+}
+
+.glass-btn {
+  -webkit-app-region: no-drag;
+  border: 1px solid rgba(127, 127, 127, 0.35);
+  background: rgba(127, 127, 127, 0.12);
+  color: inherit;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.glass-btn:hover {
+  background: rgba(127, 127, 127, 0.22);
+}
+
+.glass-btn--on {
+  border-color: rgba(34, 211, 238, 0.6);
+  color: #0891b2;
+}
+
+@media (prefers-color-scheme: dark) {
+  .glass-btn--on {
+    color: #22d3ee;
+  }
+}
+
+.glass-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  -webkit-app-region: drag;
+}
+
+.glass-hearing {
+  margin: 0;
+  font-size: 12px;
+  font-style: italic;
+  opacity: 0.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.glass-saying {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.glass-empty {
+  margin: auto 0;
+  font-size: 13px;
+  opacity: 0.5;
+  text-align: center;
+}
