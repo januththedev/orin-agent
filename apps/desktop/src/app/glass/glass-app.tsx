@@ -4,9 +4,10 @@ interface GlassViewState {
   hearing: string
   saying: string
   status: 'idle' | 'listening' | 'thinking' | 'speaking'
+  wake: string
 }
 
-const EMPTY: GlassViewState = { hearing: '', saying: '', status: 'idle' }
+const EMPTY: GlassViewState = { hearing: '', saying: '', status: 'idle', wake: '' }
 const PIN_KEY = 'orin.glass.pinned.v1'
 
 const STATUS_DOT: Record<GlassViewState['status'], string> = {
@@ -49,7 +50,8 @@ export function GlassApp() {
           payload?.status === 'thinking' ||
           payload?.status === 'speaking'
             ? payload.status
-            : 'idle'
+            : 'idle',
+        wake: typeof payload?.wake === 'string' ? payload.wake : ''
       })
     })
     return () => {
@@ -113,6 +115,8 @@ export function GlassApp() {
           {view.hearing ? <p className="glass-hearing">{view.hearing}</p> : null}
           {view.saying ? (
             <p className="glass-saying">{view.saying}</p>
+          ) : view.wake ? (
+            <p className="glass-wake">Heard “{view.wake}” — listening…</p>
           ) : !view.hearing ? (
             <p className="glass-empty">Say “hey orin”…</p>
           ) : null}

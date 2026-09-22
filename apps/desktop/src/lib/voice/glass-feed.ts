@@ -14,10 +14,21 @@ export interface GlassFeedState {
   hearing: string
   saying: string
   status: GlassStatus
+  /** The wake phrase that fired ("hey orin"), shown until real speech lands. */
+  wake: string
 }
 
 /** Whether the glass overlay window is open (main renderer side). */
 export const $glassOpen = atom(false)
+
+/**
+ * Last wake phrase fired by the backend ("hey orin"). Shown in glass until
+ * the first real user message lands, then expires after a minute so a stale
+ * phrase never haunts later sessions.
+ */
+export const $lastWakePhrase = atom<{ phrase: string; at: number } | null>(null)
+
+const WAKE_PHRASE_TTL_MS = 60_000
 
 const HEARING_CHARS = 160
 const SAYING_CHARS = 220
@@ -58,7 +69,11 @@ export function buildGlassState(): GlassFeedState {
           ? 'listening'
           : 'idle'
 
-  return { hearing, saying, status }
+  const fired = $lastWakePhrase.get()
+  const freshWake =
+    !hearing && fired && Date.now() - fired.at < WAKE_PHRASE_TTL_MS ? fired.phrase : ''
+
+  return { hearing, saying, status, wake: freshWake }
 }
 
 /** Push the snapshot to the glass window (no-op when closed/absent). */
@@ -98,6 +113,7 @@ export function useGlassFeedPush(): void {
   const playback = useStore($voicePlayback)
   const wake = useStore($wakeWord)
   const open = useStore($glassOpen)
+  const lastWake = useStore($lastWakePhrase)
   const lastSent = useRef('')
 
   useEffect(() => {
@@ -113,7 +129,12 @@ export function useGlassFeedPush(): void {
       lastSent.current = key
       pushGlassState(state)
     }
-  }, [messages, playback, wake, open])
+
+    // Real speech landed — retire the wake phrase so it never lingers.
+    if (state.hearing && lastWake) {
+      $lastWakePhrase.set(null)
+    }
+  }, [messages, playback, wake, open, lastWake])
 
   // The overlay's × button closes from its side — mirror it into the atom
   // so the menu checkbox stays truthful.

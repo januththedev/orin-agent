@@ -145,6 +145,21 @@
   overflow: hidden;
 }
 
+.glass-wake {
+  margin: auto 0;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  color: #0891b2;
+  animation: glass-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-color-scheme: dark) {
+  .glass-wake {
+    color: #22d3ee;
+  }
+}
+
 .glass-empty {
   margin: auto 0;
   font-size: 13px;

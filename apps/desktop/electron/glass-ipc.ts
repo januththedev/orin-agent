@@ -13,6 +13,8 @@ export interface GlassState {
   /** Latest assistant message (what is being said), trimmed. */
   saying: string
   status: 'idle' | 'listening' | 'thinking' | 'speaking'
+  /** Wake phrase that fired ("hey orin"), until real speech lands. */
+  wake: string
 }
 
 export interface GlassIpcDeps {

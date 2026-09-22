@@ -39,7 +39,7 @@ import { emitGatewayEvent } from '@/contrib/events'
 import { translateNow } from '@/i18n'
 import { type ChatMessage, chatMessageText } from '@/lib/chat-messages'
 import { isMessagingSource } from '@/lib/session-source'
-import { useGlassFeedPush } from '@/lib/voice/glass-feed'
+import { $lastWakePhrase, useGlassFeedPush } from '@/lib/voice/glass-feed'
 import { activateWakeIndicator } from '@/lib/wake-indicator'
 import { playWakeSound } from '@/lib/wake-sound'
 import { $billingSettingsRequest } from '@/store/billing-block'
@@ -872,7 +872,14 @@ export function ContribWiring({ children }: { children: ReactNode }) {
       emitGatewayEvent(event)
 
       if (event.type === 'wake.detected') {
-        const payload = event.payload as { profile?: null | string; start_new_session?: boolean } | undefined
+        const payload = event.payload as
+          | { profile?: null | string; start_new_session?: boolean; phrase?: string }
+          | undefined
+
+        // Remember what fired ("hey orin") for glass mode until speech lands.
+        if (typeof payload?.phrase === 'string' && payload.phrase.trim()) {
+          $lastWakePhrase.set({ phrase: payload.phrase.trim().slice(0, 40), at: Date.now() })
+        }
 
         // Free the Mac mic so voice conversation can open getUserMedia.
         // Server already pauses the detector lease; this stops client PCM feed.

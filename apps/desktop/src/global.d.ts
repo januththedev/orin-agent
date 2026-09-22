@@ -76,10 +76,11 @@ declare global {
         hearing: string
         saying: string
         status: 'idle' | 'listening' | 'thinking' | 'speaking'
+        wake: string
       }) => void
       glassSetPinned: (pinned: boolean) => Promise<{ ok: boolean; pinned: boolean }>
       onGlassState: (
-        callback: (state: { hearing: string; saying: string; status: string }) => void
+        callback: (state: { hearing: string; saying: string; status: string; wake: string }) => void
       ) => () => void
       onGlassClosed: (callback: () => void) => () => void
       getGatewayWsUrl: (profile?: null | string) => Promise<GatewayWsUrlResult>
