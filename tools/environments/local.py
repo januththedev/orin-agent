@@ -184,7 +184,7 @@ def _rewrite_msys_output(text: str) -> str:
     if not _IS_WINDOWS:
         return text
     pattern = re.compile(r"(?<![A-Za-z0-9:/])(/[A-Za-z])(/[^\s'\";]+)")
-    return pattern.sub(lambda match: f"{match.group(1)[1:].upper()}:{match.group(2).replace('/', '\\\\')}", text)
+    return pattern.sub(lambda match: f"{match.group(1)[1:].upper()}:{match.group(2).replace('/', chr(92))}", text)
 
 
 def _quote_bash_path(path: str) -> str:
