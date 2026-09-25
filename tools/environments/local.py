@@ -165,6 +165,28 @@ def _bash_safe_path(path: str) -> str:
     return _windows_to_msys_path(path).replace("\\", "/") if _IS_WINDOWS and path else path
 
 
+def _rewrite_windows_cd_paths(command: str) -> str:
+    """Translate native drive paths in explicit ``cd`` commands for Git Bash.
+
+    Users and desktop callers commonly pass ``cd 'C:\\work\\dir'`` while the
+    local backend executes through Git Bash. Only a quoted/unquoted drive path
+    immediately following ``cd`` is rewritten; arbitrary command text and
+    non-path arguments are left untouched.
+    """
+    if not _IS_WINDOWS:
+        return command
+    pattern = re.compile(r"(?P<prefix>(?:^|;)\s*cd\s+)(?P<quote>['\"]?)(?P<path>[A-Za-z]:[\\/][^'\"\r\n;]+?)(?P=quote)(?P<suffix>(?=\s|;|$))")
+    return pattern.sub(lambda match: f"{match.group('prefix')}{match.group('quote')}{_bash_safe_path(match.group('path'))}{match.group('quote')}{match.group('suffix')}", command)
+
+
+def _rewrite_msys_output(text: str) -> str:
+    """Return Git Bash drive paths in the native form shown to Windows users."""
+    if not _IS_WINDOWS:
+        return text
+    pattern = re.compile(r"(?<![A-Za-z0-9:/])(/[A-Za-z])(/[^\s'\";]+)")
+    return pattern.sub(lambda match: f"{match.group(1)[1:].upper()}:{match.group(2).replace('/', chr(92))}", text)
+
+
 def _quote_bash_path(path: str) -> str:
     """Quote *path* for safe interpolation into a Git Bash script on Windows."""
     import shlex
@@ -899,6 +921,14 @@ class LocalEnvironment(BaseEnvironment):
         # tempfile's own candidate walk already covers the system temp dir.
         fallback = tempfile.gettempdir()
         return _posix(fallback if fallback.startswith("/") else os.path.abspath(fallback))
+
+    def _wrap_command(self, command: str, cwd: str) -> str:
+        return super()._wrap_command(_rewrite_windows_cd_paths(command), cwd)
+
+    def _finalize_wait_result(self, collector, rendered: str, returncode: int | None) -> dict:
+        result = BaseEnvironment._finalize_wait_result(collector, rendered, returncode)
+        result["output"] = _rewrite_msys_output(result.get("output", ""))
+        return result
 
     @staticmethod
     def _quote_cwd_for_cd(cwd: str) -> str:
